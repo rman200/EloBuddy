@@ -61,8 +61,6 @@ namespace Shen
             
 
             FarmMenu = Menu.AddSubMenu("Farm", "Farm");
-            FarmMenu.AddGroupLabel("Farm Settings");
-            FarmMenu.AddSeparator();
             FarmMenu.AddGroupLabel("LastHit");
             FarmMenu.Add("useQ", new CheckBox("Use Q"));
 
@@ -72,10 +70,12 @@ namespace Shen
             MiscMenu.Add("useRCombo", new CheckBox("Auto R Low Allies"));
             MiscMenu.Add("useEturret", new CheckBox("Auto E Under Turret"));
             MiscMenu.Add("useWCombo", new CheckBox("Auto W Incoming Damage"));
+            MiscMenu.Add("autoHarass", new CheckBox("Auto Harass"));
+            MiscMenu.Add("useAGapcloser", new CheckBox("Anti GapCloser"));
             
             Game.OnUpdate += Game_OnUpdate;
             Drawing.OnDraw += Drawing_OnDraw;
-            //Gapcloser.OnGapcloser += Gapcloser_OnGapcloser;
+            Gapcloser.OnGapcloser += Gapcloser_OnGapcloser;
             Obj_AI_Base.OnProcessSpellCast += OnProcessSpell;
           
         
@@ -96,7 +96,7 @@ namespace Shen
 
         private static void Game_OnUpdate(EventArgs args)
         {
-            
+            var autoHarass = MiscMenu["autoHarass"].Cast<CheckBox>().CurrentValue;
             var useEturret = MiscMenu["useEturret"].Cast<CheckBox>().CurrentValue;  
             var useR = MiscMenu["useRCombo"].Cast<CheckBox>().CurrentValue;
             //Orbwalker.ForcedTarget = null;
@@ -128,7 +128,7 @@ namespace Shen
                     }
                 }
             }
-            if (Orbwalker.ActiveModesFlags.HasFlag(Orbwalker.ActiveModes.Harass))
+            if (Orbwalker.ActiveModesFlags.HasFlag(Orbwalker.ActiveModes.Harass) || autoHarass)
             {
                 var useQ = ComboMenu["useQCombo"].Cast<CheckBox>().CurrentValue;
                 foreach (var target in HeroManager.Enemies.Where(o => o.IsValidTarget(500) && !o.IsDead && !o.IsZombie))
@@ -160,24 +160,34 @@ namespace Shen
             {
                 W.Cast();
             }
-            if (!sender.IsMe && sender.IsEnemy && (sender is AIHeroClient || sender is Obj_AI_Turret) && args.Target.IsMe && W.IsReady()) //for turrets/heroes
+            if (!sender.IsMe && sender.IsEnemy && sender is AIHeroClient && args.Target.IsMe && W.IsReady() && useW) //for heroes
             {
                 W.Cast();
             }
+        }
 
-
-            if (sender.IsEnemy && sender.IsValid && useW && W.IsReady())                                                   //for AA's
+        
+        void Obj_AI_Turret_OnBasicAttack(Obj_AI_Base sender, GameObjectProcessSpellCastEventArgs args)          //for turrets
+        {
+            if (sender is Obj_AI_Turret && args.Target.IsMe && W.IsReady())
             {
-                if (args.SData.Name.ToLower().Contains("basicattack") && sender.Distance(ObjectManager.Player) < 500)
-                {
-                    W.Cast();
-                }
+                W.Cast();
             }
-       }
-       /*static void Gapcloser_OnGapcloser(AIHeroClient sender, Gapcloser.GapcloserEventArgs e)
-       {
             
-       }*/
+
+            
+        }
+
+        private static void Gapcloser_OnGapcloser(AIHeroClient sender, Gapcloser.GapcloserEventArgs gapclose)
+        {
+            
+            var UseGapcloser = MiscMenu["useAGapcloser"].Cast<CheckBox>().CurrentValue;
+
+            if (E.IsReady() && ObjectManager.Player.Distance(gapclose.Sender, true) < E.Range * E.Range && UseGapcloser && gapclose.Sender.IsEnemy)
+            {
+                E.Cast(gapclose.Sender);
+            }
+        }
        
 
     }
