@@ -25,7 +25,7 @@ namespace Shen
                 Loading.OnLoadingComplete += On_LoadingComplete; 
             }
         private const string MenuName = "Overpowered Shen";
-        public static Menu Menu, ComboMenu, DrawingsMenu, FarmMenu;
+        public static Menu Menu, ComboMenu, DrawingsMenu, FarmMenu, MiscMenu;
         public static Spell.Targeted Q { get; private set; }
         public static Spell.Active W { get; private set; }
         public static Spell.Skillshot E { get; private set; }
@@ -50,9 +50,9 @@ namespace Shen
             ComboMenu.AddGroupLabel("Combo Settings");
             ComboMenu.AddSeparator();
             ComboMenu.Add("useQCombo", new CheckBox("Use Q"));
-            ComboMenu.Add("useWCombo", new CheckBox("Use W"));
+            
             ComboMenu.Add("useECombo", new CheckBox("Use E"));
-            ComboMenu.Add("useRCombo", new CheckBox("Use R"));
+            
             
             
             DrawingsMenu = Menu.AddSubMenu("Drawings", "Drawings");
@@ -66,6 +66,13 @@ namespace Shen
             FarmMenu.AddGroupLabel("LastHit");
             FarmMenu.Add("useQ", new CheckBox("Use Q"));
 
+            MiscMenu = Menu.AddSubMenu("Farm", "Farm");
+            MiscMenu.AddGroupLabel("Farm Settings");
+            MiscMenu.AddSeparator();
+            MiscMenu.Add("useRCombo", new CheckBox("Auto R Low Allies"));
+            MiscMenu.Add("useEturret", new CheckBox("Auto E Under Turret"));
+            MiscMenu.Add("useWCombo", new CheckBox("Auto W Incoming Damage"));
+            
             Game.OnUpdate += Game_OnUpdate;
             Drawing.OnDraw += Drawing_OnDraw;
             //Gapcloser.OnGapcloser += Gapcloser_OnGapcloser;
@@ -89,9 +96,11 @@ namespace Shen
 
         private static void Game_OnUpdate(EventArgs args)
         {
-            var useR = ComboMenu["useRCombo"].Cast<CheckBox>().CurrentValue;
+            var turret = ObjectManager.Get<Obj_AI_Turret>().First(a => a.IsAlly && !a.IsDead && a.Distance(ObjectManager.Player) <= 750); //get nearest turret
+            var useEturret = MiscMenu["useEturret"].Cast<CheckBox>().CurrentValue;  
+            var useR = MiscMenu["useRCombo"].Cast<CheckBox>().CurrentValue;
             Orbwalker.ForcedTarget = null;
-            if (Orbwalker.ActiveModesFlags.HasFlag(Orbwalker.ActiveModes.Combo))
+            if (Orbwalker.ActiveModesFlags.HasFlag(Orbwalker.ActiveModes.Combo))                                                    //Combo
             {
                 var useQ = ComboMenu["useQCombo"].Cast<CheckBox>().CurrentValue;
                 var useE = ComboMenu["useECombo"].Cast<CheckBox>().CurrentValue;
@@ -108,7 +117,7 @@ namespace Shen
                     }
                 }
             }
-            if (Orbwalker.ActiveModesFlags.HasFlag(Orbwalker.ActiveModes.LaneClear) || Orbwalker.ActiveModesFlags.HasFlag(Orbwalker.ActiveModes.LastHit))
+            if (Orbwalker.ActiveModesFlags.HasFlag(Orbwalker.ActiveModes.LaneClear) || Orbwalker.ActiveModesFlags.HasFlag(Orbwalker.ActiveModes.LastHit))          //Laning
             {
                 var useQ = FarmMenu["useQ"].Cast<CheckBox>().CurrentValue;
                 foreach (var minion in ObjectManager.Get<Obj_AI_Base>().OrderBy(m => m.Health).Where(m => m.IsMinion && !m.IsDead && m.IsValidTarget(475)))
@@ -135,10 +144,18 @@ namespace Shen
             {
                 R.Cast(ally);
             }
+            
+            if (useEturret && E.IsReady() && turret != null)
+            {
+                var target = TargetSelector.GetTarget(E.Range, DamageType.Physical);
+                if (target.Distance(turret) < 750)
+                
+                E.Cast(target);
+            }
         }
         public static void OnProcessSpell(Obj_AI_Base sender, GameObjectProcessSpellCastEventArgs args)
         {
-            var useW = ComboMenu["useWCombo"].Cast<CheckBox>().CurrentValue;
+            var useW = MiscMenu["useWCombo"].Cast<CheckBox>().CurrentValue;
             if (!sender.IsMe && sender.IsEnemy && ObjectManager.Player.Health < 200 && W.IsReady() && args.Target.IsMe && useW) // for minions attack
             {
                 W.Cast();
@@ -161,7 +178,7 @@ namespace Shen
        {
             
        }*/
-
+       
 
     }
 }

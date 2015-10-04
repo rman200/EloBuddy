@@ -9,3 +9,6 @@ C:\Users\RMAN\Documents\Visual Studio 2012\Projects\Shen\Shen\bin\Debug\Newtonso
 C:\Users\RMAN\Documents\Visual Studio 2012\Projects\Shen\Shen\obj\Debug\Shen.csprojResolveAssemblyReference.cache
 C:\Users\RMAN\Documents\Visual Studio 2012\Projects\Shen\Shen\obj\Debug\Shen.exe
 C:\Users\RMAN\Documents\Visual Studio 2012\Projects\Shen\Shen\obj\Debug\Shen.pdb
+C:\Users\RMAN\Documents\GitHub\EloBuddy\Shen\bin\Debug\Shen.exe.config
+C:\Users\RMAN\Documents\GitHub\EloBuddy\Shen\obj\Debug\Shen.exe
+C:\Users\RMAN\Documents\GitHub\EloBuddy\Shen\obj\Debug\Shen.pdb
