@@ -66,8 +66,8 @@ namespace Shen
             FarmMenu.AddGroupLabel("LastHit");
             FarmMenu.Add("useQ", new CheckBox("Use Q"));
 
-            MiscMenu = Menu.AddSubMenu("Farm", "Farm");
-            MiscMenu.AddGroupLabel("Farm Settings");
+            MiscMenu = Menu.AddSubMenu("Misc", "Misc");
+            MiscMenu.AddGroupLabel("Misc Settings");
             MiscMenu.AddSeparator();
             MiscMenu.Add("useRCombo", new CheckBox("Auto R Low Allies"));
             MiscMenu.Add("useEturret", new CheckBox("Auto E Under Turret"));
