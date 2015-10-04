@@ -96,10 +96,10 @@ namespace Shen
 
         private static void Game_OnUpdate(EventArgs args)
         {
-            var turret = ObjectManager.Get<Obj_AI_Turret>().First(a => a.IsAlly && !a.IsDead && a.Distance(ObjectManager.Player) <= 750); //get nearest turret
+            
             var useEturret = MiscMenu["useEturret"].Cast<CheckBox>().CurrentValue;  
             var useR = MiscMenu["useRCombo"].Cast<CheckBox>().CurrentValue;
-            Orbwalker.ForcedTarget = null;
+            //Orbwalker.ForcedTarget = null;
             if (Orbwalker.ActiveModesFlags.HasFlag(Orbwalker.ActiveModes.Combo))                                                    //Combo
             {
                 var useQ = ComboMenu["useQCombo"].Cast<CheckBox>().CurrentValue;
@@ -144,13 +144,13 @@ namespace Shen
             {
                 R.Cast(ally);
             }
-            
+            var turret = ObjectManager.Get<Obj_AI_Turret>().First(a => a.IsAlly && !a.IsDead && a.Distance(ObjectManager.Player) <= 750); //get nearest turret
             if (useEturret && E.IsReady() && turret != null)
             {
-                var target = TargetSelector.GetTarget(E.Range, DamageType.Physical);
-                if (target.Distance(turret) < 750)
+                var target2 = TargetSelector.GetTarget(E.Range, DamageType.Physical);
+                if (target2.Distance(turret) < 750)
                 
-                E.Cast(target);
+                E.Cast(target2);
             }
         }
         public static void OnProcessSpell(Obj_AI_Base sender, GameObjectProcessSpellCastEventArgs args)
