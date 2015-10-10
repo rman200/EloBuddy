@@ -1,0 +1,11 @@
+C:\Users\RMAN\Source\Workspaces\Lissandra\Lissandra\Lissandra\bin\Debug\Lissandra.exe.config
+C:\Users\RMAN\Source\Workspaces\Lissandra\Lissandra\Lissandra\bin\Debug\Lissandra.exe
+C:\Users\RMAN\Source\Workspaces\Lissandra\Lissandra\Lissandra\bin\Debug\Lissandra.pdb
+C:\Users\RMAN\Source\Workspaces\Lissandra\Lissandra\Lissandra\bin\Debug\EloBuddy.dll
+C:\Users\RMAN\Source\Workspaces\Lissandra\Lissandra\Lissandra\bin\Debug\EloBuddy.SDK.dll
+C:\Users\RMAN\Source\Workspaces\Lissandra\Lissandra\Lissandra\bin\Debug\SharpDX.dll
+C:\Users\RMAN\Source\Workspaces\Lissandra\Lissandra\Lissandra\bin\Debug\SharpDX.Direct3D9.dll
+C:\Users\RMAN\Source\Workspaces\Lissandra\Lissandra\Lissandra\bin\Debug\Newtonsoft.Json.dll
+C:\Users\RMAN\Source\Workspaces\Lissandra\Lissandra\Lissandra\obj\Debug\Lissandra.csprojResolveAssemblyReference.cache
+C:\Users\RMAN\Source\Workspaces\Lissandra\Lissandra\Lissandra\obj\Debug\Lissandra.exe
+C:\Users\RMAN\Source\Workspaces\Lissandra\Lissandra\Lissandra\obj\Debug\Lissandra.pdb
