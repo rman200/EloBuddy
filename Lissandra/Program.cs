@@ -20,7 +20,7 @@ namespace Lissandra
         public static Spell.Skillshot E { get; private set; }
         public static Spell.Targeted R { get; private set; }
         public static Vector2 missilepos;
-        private static MissileClient LissEMissile;
+        private static MissileClient LissandraEMissile;
         public static bool jump;
         //public static bool EnemyTurrets;
         //public static event Interrupter.InterruptableSpellHandler OnInterruptableSpell;
@@ -83,10 +83,11 @@ namespace Lissandra
             MiscMenu.Add("useWflee", new CheckBox("W flee"));
             MiscMenu.AddSeparator();
             MiscMenu.AddGroupLabel("Ult Settings");
-            foreach (var enemy in EntityManager.Heroes.Enemies)
+            MiscMenu.Add("ulthp", new Slider("Min Health % to Ult", 20, 0, 100));
+            /*foreach (var enemy in EntityManager.Heroes.Enemies)
             {
                 MiscMenu.Add("dontR" + enemy.ChampionName, new CheckBox("Dont Ult " + enemy.ChampionName, false));
-            }
+            }*/
             Game.OnTick += MissilePosition;
             Game.OnTick += Game_OnTick;
             Drawing.OnDraw += OnDraw;
@@ -162,7 +163,8 @@ namespace Lissandra
             {
                 if (miss.SpellCaster.IsMe && miss.SpellCaster.IsValid && miss.SData.Name == "LissandraEMissile")
                 {
-                    LissEMissile = miss;
+                    LissandraEMissile = miss;
+                    Chat.Print("Missil criado");
                 }
             }
         }
@@ -173,24 +175,25 @@ namespace Lissandra
             if (miss == null || !miss.IsValid) return;
             if (miss.SpellCaster is AIHeroClient && miss.SpellCaster.IsValid && miss.SpellCaster.IsMe && miss.SData.Name == "LissandraEMissile")
             {
-                LissEMissile = null;
+                LissandraEMissile = null;
                 missilepos = new Vector2(0, 0);
+                Chat.Print("Missil apagado");
             }
         }
         
         private static void MissilePosition(EventArgs args)
         {
-            if (LissEMissile == null || ObjectManager.Player.IsDead)
+            if (LissandraEMissile == null || ObjectManager.Player.IsDead)
             {
                 return;
             }
-            missilepos = LissEMissile.Position.To2D();
+            missilepos = LissandraEMissile.Position.To2D();
         }
 
         //Combo
         private static void Combo()
         {
-            var target = TargetSelector.GetTarget(E.Range, DamageType.Magical);
+            var target = TargetSelector.GetTarget(Q.Range + E.Range, DamageType.Magical);
             var useQ = ComboMenu["useQCombo"].Cast<CheckBox>().CurrentValue;
             var useW = ComboMenu["useWCombo"].Cast<CheckBox>().CurrentValue;
             var useE = ComboMenu["useECombo"].Cast<CheckBox>().CurrentValue;
@@ -207,17 +210,28 @@ namespace Lissandra
                 { Q.Cast(target);
                     
                 }
-                                
+                else if (useQ && Q.IsReady() && target.IsValidTarget(800) && !target.IsZombie && !target.IsInvulnerable && !target.IsDead)
+                {
+                    foreach (var minion in EntityManager.MinionsAndMonsters.EnemyMinions.Where(m => !m.IsDead && m.IsValidTarget(800)))
+                    {
+                        if (target.Distance(ObjectManager.Player, false) == minion.Distance(ObjectManager.Player, false) + minion.Distance(target, false))
+                        { Q.Cast(minion); }
+                    }
+                }
+
                 if (E.IsReady() && useE && !target.IsValidTarget(Q.Range) && target.IsValidTarget(E.Range + Q.Range - 100))
                 {
+                    Chat.Print("deveria pular");
                     if (!ObjectManager.Player.HasBuff("LissandraE"))
                     {
-                        E.Cast(target);
+                        Chat.Print("vai poular");
+                        ObjectManager.Player.Spellbook.CastSpell(SpellSlot.E, target.ServerPosition);
                         jump = true;
                     }
-                    if (Vector2.Distance(missilepos, LissEMissile.EndPosition.To2D()) <= 100 && ObjectManager.Player
+                    if (Vector2.Distance(missilepos, LissandraEMissile.EndPosition.To2D()) <= 100 && ObjectManager.Player
                         .HasBuff("LissandraE") && target.Distance(ObjectManager.Player, false) > target.Distance(missilepos, false) && jump == true /*&& EnemyTurrets != false*/ )
                     {
+                        Chat.Print("pulando");
                         E.Cast(ObjectManager.Player);
                         jump = false;
                     }
@@ -232,10 +246,18 @@ namespace Lissandra
         private static void Harass()
         {
             var useQ = ComboMenu["useQCombo"].Cast<CheckBox>().CurrentValue;
-            var target = TargetSelector.GetTarget(Q.Range, DamageType.Magical);
+            var target = TargetSelector.GetTarget(800, DamageType.Magical);
             if (useQ && Q.IsReady() && target.IsValidTarget(Q.Range) && !target.IsZombie && !target.IsInvulnerable && !target.IsDead)
             {
                 Q.Cast(target);
+            }
+            else if (useQ && Q.IsReady() && target.IsValidTarget(800) && !target.IsZombie && !target.IsInvulnerable && !target.IsDead)
+            {
+                foreach (var minion in EntityManager.MinionsAndMonsters.EnemyMinions.Where(m => !m.IsDead && m.IsValidTarget(800)))
+                {
+                     if (target.Distance(ObjectManager.Player, false) == minion.Distance(ObjectManager.Player, false) + minion.Distance(target, false))
+                        { Q.Cast(minion); } 
+                }
             }
         }
 
@@ -244,7 +266,7 @@ namespace Lissandra
         //LastHit
         private static void LastHit()
         {
-            var minions = EntityManager.MinionsAndMonsters.EnemyMinions.OrderBy(m => m.Health).Where(m => m.IsEnemy && !m.IsDead && m.IsValidTarget(Q.Range));
+            var minions = EntityManager.MinionsAndMonsters.EnemyMinions.OrderBy(m => m.Health).Where(m => !m.IsDead && m.IsValidTarget(Q.Range));
             if (minions == null) return;
             var useQ = FarmMenu["useQlh"].Cast<CheckBox>().CurrentValue;
 
@@ -302,7 +324,7 @@ namespace Lissandra
                 if (useE && E.IsReady()) 
                 {
                     E.Cast(Game.CursorPos);
-                    if (Vector2.Distance(missilepos, LissEMissile.EndPosition.To2D())<= 100 && missilepos.Distance(enemy, false) > ObjectManager.Player.Distance(enemy, false))
+                    if (Vector2.Distance(missilepos, LissandraEMissile.EndPosition.To2D())<= 100 && missilepos.Distance(enemy, false) > ObjectManager.Player.Distance(enemy, false))
                     { E.Cast(ObjectManager.Player); }
 
                 }
@@ -329,8 +351,14 @@ namespace Lissandra
             var useR = MiscMenu["useRCombo"].Cast<CheckBox>().CurrentValue; //R check
             if (!R.IsReady() || !useR)
             { return;  }
-            
-            //var NearEnemies = 0;
+            var ulthp = MiscMenu["ulthp"].Cast<Slider>().CurrentValue;
+            if (ObjectManager.Player.HealthPercent <= ulthp)
+            {
+                R.Cast(ObjectManager.Player);
+                return;
+            }
+
+            /*var NearEnemies = 0;
             foreach (var enemy2 in EntityManager.Heroes.Enemies.Where(o => o.IsValidTarget(R.Range) && !o.IsDead && !o.IsZombie))
             {
                 
@@ -344,18 +372,14 @@ namespace Lissandra
                 {
                     R.Cast(ObjectManager.Player);
                     return;
-                }*/
-                if (ObjectManager.Player.HealthPercent <= 10)
-                {
-                    R.Cast(ObjectManager.Player);
-                    return;
                 }
-            }
+                
+            }*/
         }
         private static void AutoHarass()
         {
             var AutoHarass = MiscMenu["autoHarass"].Cast<CheckBox>().CurrentValue;
-            if (AutoHarass && Q.IsReady() && ObjectManager.Player.HasBuff("LissandraPassive"))
+            if (AutoHarass && Q.IsReady() && ObjectManager.Player.HasBuff("LissandraPassiveReady"))
             {
                 Harass();
             }
@@ -363,7 +387,7 @@ namespace Lissandra
        private static void OnInterruptableSpell(Obj_AI_Base sender , Interrupter.InterruptableSpellEventArgs Interrupt)
         {
             var dangerlvl = Interrupt.DangerLevel.ToString();
-            if (!sender.IsDead && !sender.IsZombie &&!sender.IsMe && sender.IsEnemy && (dangerlvl == "4" || dangerlvl == "5") )
+            if (!sender.IsDead && !sender.IsZombie && !sender.IsMe && sender.IsEnemy && (dangerlvl == "4" || dangerlvl == "5") )
             {
                 if (sender.IsValidTarget(550) && R.IsReady() )
                 { R.Cast(sender); } 
